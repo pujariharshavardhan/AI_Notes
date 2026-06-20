@@ -156,14 +156,14 @@ const Storage = (() => {
   function saveSettings(patch) {
     const merged = { ...getSettings(), ...patch };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(merged));
-    /* Sync to Supabase in background (non-blocking) */
+    /* Sync to Supabase — geminiApiKey is managed by config.js, never stored remotely */
     if (Auth.getUid()) {
       window.supabaseClient.from('user_settings').upsert({
         id:                       Auth.getUid(),
-        theme:                    merged.theme                    || 'light',
-        gemini_api_key:           merged.geminiApiKey            || '',
-        cloudinary_cloud_name:    merged.cloudinaryCloudName     || '',
-        cloudinary_upload_preset: merged.cloudinaryUploadPreset  || '',
+        theme:                    merged.theme                 || 'light',
+        gemini_api_key:           '',
+        cloudinary_cloud_name:    merged.cloudinaryCloudName  || '',
+        cloudinary_upload_preset: merged.cloudinaryUploadPreset || '',
       }, { onConflict: 'id' }).then(({ error }) => {
         if (error) console.warn('[SNK] Settings sync failed:', error.message);
       });
@@ -176,11 +176,11 @@ const Storage = (() => {
     const { data } = await window.supabaseClient
       .from('user_settings').select('*').eq('id', Auth.getUid()).maybeSingle();
     if (!data) return;
+    /* Skip geminiApiKey — config.js always sets the correct key, never pull from DB */
     const remote = {
-      theme:                    data.theme                    || 'light',
-      geminiApiKey:             data.gemini_api_key           || '',
-      cloudinaryCloudName:      data.cloudinary_cloud_name    || '',
-      cloudinaryUploadPreset:   data.cloudinary_upload_preset || '',
+      theme:                  data.theme                    || 'light',
+      cloudinaryCloudName:    data.cloudinary_cloud_name    || '',
+      cloudinaryUploadPreset: data.cloudinary_upload_preset || '',
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...getSettings(), ...remote }));
   }
