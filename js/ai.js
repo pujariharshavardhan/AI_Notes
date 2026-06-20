@@ -6,9 +6,7 @@
  * Model: gemini-1.5-flash (free-tier friendly).
  */
 const AI = (() => {
-  const MODEL    = 'gemini-2.0-flash';
-  const BASE_V1  = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent`;
-  const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+  const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'];
 
   function _key() {
     return Storage.getSettings().geminiApiKey?.trim() || '';
@@ -16,34 +14,40 @@ const AI = (() => {
 
   function hasKey() { return !!_key(); }
 
+  function _urls(model) {
+    return {
+      v1:    `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent`,
+      v1beta:`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    };
+  }
+
   async function _tryFetch(url, headers, body) {
     const res  = await fetch(url, { method: 'POST', headers, body });
     const data = await res.json();
     return { res, data };
   }
 
-  async function _call(prompt) {
-    const key = _key();
-    if (!key) throw new Error('Gemini API key not configured.');
-
-    const body    = JSON.stringify({
+  async function _callModel(prompt, model) {
+    const key  = _key();
+    const body = JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
     });
-    const ct      = { 'Content-Type': 'application/json' };
-    const isAIza  = key.startsWith('AIza');
+    const ct   = { 'Content-Type': 'application/json' };
+    const { v1, v1beta } = _urls(model);
 
-    /* Build ordered list of attempts: v1 key-param, v1 bearer, v1beta key-param, v1beta bearer */
-    const attempts = isAIza
+    /* For AQ./non-AIza keys try ?key= param first (Bearer gives 401),
+       then Bearer as fallback. AIza keys only need ?key= param. */
+    const attempts = key.startsWith('AIza')
       ? [
-          { url: `${BASE_V1}?key=${key}`,   headers: ct },
-          { url: `${BASE_URL}?key=${key}`,  headers: ct },
+          { url: `${v1}?key=${key}`,    headers: ct },
+          { url: `${v1beta}?key=${key}`,headers: ct },
         ]
       : [
-          { url: BASE_V1,  headers: { ...ct, Authorization: `Bearer ${key}` } },
-          { url: BASE_URL, headers: { ...ct, Authorization: `Bearer ${key}` } },
-          { url: `${BASE_V1}?key=${key}`,  headers: ct },
-          { url: `${BASE_URL}?key=${key}`, headers: ct },
+          { url: `${v1}?key=${key}`,    headers: ct },
+          { url: `${v1beta}?key=${key}`,headers: ct },
+          { url: v1,    headers: { ...ct, Authorization: `Bearer ${key}` } },
+          { url: v1beta,headers: { ...ct, Authorization: `Bearer ${key}` } },
         ];
 
     let lastErr = '';
@@ -52,18 +56,28 @@ const AI = (() => {
         const { res, data } = await _tryFetch(attempt.url, attempt.headers, body);
         if (res.ok && !data.error) {
           const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!text) throw new Error('Empty response from Gemini.');
-          return text.trim();
+          if (text) return text.trim();
         }
         lastErr = data.error?.message || `HTTP ${res.status}`;
-        /* Don't retry on quota errors — they'll fail on all endpoints */
-        if (res.status === 429 || (data.error?.code === 429)) throw new Error(lastErr);
+        if (res.status === 401) continue;          // try next auth style
+        if (res.status === 429) return null;       // quota — try next model
+        if (res.status === 404) return null;       // model not found — try next
       } catch (e) {
-        if (e.message.includes('quota') || e.message.includes('429') || e.message.includes('Quota')) throw e;
         lastErr = e.message;
       }
     }
-    throw new Error(lastErr || 'Gemini API request failed.');
+    return null;
+  }
+
+  async function _call(prompt) {
+    const key = _key();
+    if (!key) throw new Error('Gemini API key not configured.');
+
+    for (const model of MODELS) {
+      const result = await _callModel(prompt, model);
+      if (result !== null) return result;
+    }
+    throw new Error('AI quota exceeded or key invalid. Please check your Google AI Studio API key and billing at https://aistudio.google.com/apikey');
   }
 
   /**
