@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Notes</title>
+  <link rel="icon" type="image/png" href="images/logo.png">
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <!-- Quill Rich Text Editor -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     AUTH SCREEN  (hidden when logged in)
+══════════════════════════════════════════════════════════ -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-container">
+
+    <!-- Left branding panel -->
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="auth-brand-logo"><img src="images/logo.png" alt="HarAm Logo" class="brand-logo-img"></div>
+        <h1>AI Notes</h1>
+        <p>Your AI-powered notes companion</p>
+      </div>
+      <div class="auth-feature-list">
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon"><i class="fas fa-brain"></i></div>
+          <div><strong>AI-Powered</strong><span>Summarise, generate &amp; fix grammar instantly</span></div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon"><i class="fas fa-microphone"></i></div>
+          <div><strong>Voice Notes</strong><span>Speak your notes with speech-to-text</span></div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon"><i class="fas fa-camera"></i></div>
+          <div><strong>OCR</strong><span>Convert images and photos to text</span></div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon"><i class="fas fa-cloud"></i></div>
+          <div><strong>Cloud Sync</strong><span>Firebase sync across all your devices</span></div>
+        </div>
+        <div class="auth-feature-item">
+          <div class="auth-feature-icon"><i class="fas fa-pen-nib"></i></div>
+          <div><strong>Rich Text</strong><span>Bold, italic, lists, links and more</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right form panel -->
+    <div class="auth-right">
+
+      <!-- ── LOGIN PANE ── -->
+      <div class="auth-pane" id="loginPane">
+        <div class="auth-pane-header">
+          <h2>Welcome back</h2>
+          <p>Sign in to continue</p>
+        </div>
+
+        <div class="alert alert-danger d-none" id="loginError"></div>
+
+        <div class="mb-3">
+          <label class="form-label">Email address</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" class="form-control" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <label class="form-label mb-0">Password</label>
+            <a href="#" class="auth-link" id="forgotPwdLink" style="font-size:.8rem">Forgot password?</a>
+          </div>
+          <div class="input-with-icon mt-1">
+            <i class="fas fa-lock"></i>
+            <input type="password" class="form-control" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="pw-toggle" id="loginPwToggle"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-100 mb-3" id="loginBtn">
+          <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+
+        <p class="auth-switch-text">
+          Don't have an account? <a href="#" class="auth-link" id="goToRegisterBtn">Create one</a>
+        </p>
+      </div>
+
+      <!-- ── REGISTER PANE ── -->
+      <div class="auth-pane d-none" id="registerPane">
+        <div class="auth-pane-header">
+          <h2>Create account</h2>
+          <p>Start organising your notes today</p>
+        </div>
+
+        <div class="alert alert-danger d-none" id="registerError"></div>
+
+        <div class="mb-3">
+          <label class="form-label">Full Name</label>
+          <div class="input-with-icon">
+            <i class="fas fa-user"></i>
+            <input type="text" class="form-control" id="regName" placeholder="Your full name" autocomplete="name">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email address</label>
+          <div class="input-with-icon">
+            <i class="fas fa-envelope"></i>
+            <input type="email" class="form-control" id="regEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" class="form-control" id="regPassword" placeholder="At least 6 characters" autocomplete="new-password">
+            <button type="button" class="pw-toggle" id="regPwToggle"><i class="fas fa-eye"></i></button>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Confirm Password</label>
+          <div class="input-with-icon">
+            <i class="fas fa-lock"></i>
+            <input type="password" class="form-control" id="regConfirm" placeholder="Repeat password" autocomplete="new-password">
+          </div>
+        </div>
+
+        <button class="btn btn-primary w-100 mb-3" id="registerBtn">
+          <i class="fas fa-user-plus"></i> Create Account
+        </button>
+
+        <p class="auth-switch-text">
+          Already have an account? <a href="#" class="auth-link" id="goToLoginBtn">Sign in</a>
+        </p>
+      </div>
+
+    </div><!-- /auth-right -->
+  </div><!-- /auth-container -->
+</div><!-- /authScreen -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     APP SCREEN  (hidden until logged in)
+══════════════════════════════════════════════════════════ -->
+<div id="appScreen" class="d-none">
+
+  <!-- Mobile sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ───── SIDEBAR ───── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><img src="images/logo.png" alt="Logo" class="sidebar-logo-img"><span>AI Notes</span></div>
+      <button class="sidebar-close-btn" id="sidebarCloseBtn"><i class="fas fa-times"></i></button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item active" data-view="dashboard"><i class="fas fa-home"></i><span>Dashboard</span></li>
+        <li class="nav-item" data-view="all-notes"><i class="fas fa-book-open"></i><span>All Notes</span></li>
+        <li class="nav-item" data-view="favorites"><i class="fas fa-star"></i><span>Favourites</span></li>
+        <li class="nav-item" data-view="pinned"><i class="fas fa-thumbtack"></i><span>Pinned</span></li>
+      </ul>
+      <div class="sidebar-section">
+        <span class="section-label">Categories</span>
+        <ul class="nav-list" id="categoryNavList"></ul>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="theme-row">
+        <span id="themeLabel"><i class="fas fa-sun"></i> Light Mode</span>
+        <div class="toggle-switch" id="themeToggle"><div class="toggle-knob"></div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ───── MAIN CONTENT ───── -->
+  <div class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger-btn" id="hamburgerBtn"><i class="fas fa-bars"></i></button>
+        <h5 class="page-title" id="pageTitle">Dashboard</h5>
+      </div>
+      <div class="topbar-right">
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" id="globalSearch" placeholder="Search notes…">
+          <button class="clear-search-btn d-none" id="clearSearchBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <button class="btn btn-primary create-btn" id="createNoteBtn">
+          <i class="fas fa-plus"></i><span class="btn-label"> New Note</span>
+        </button>
+        <button class="icon-btn" id="settingsBtn" title="Settings"><i class="fas fa-gear"></i></button>
+        <div class="user-area">
+          <div class="user-avatar" id="topbarAvatar" title="User profile">U</div>
+          <span class="topbar-user-name" id="topbarUserName"></span>
+          <button class="icon-btn" id="logoutBtn" title="Sign out"><i class="fas fa-right-from-bracket"></i></button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── DASHBOARD VIEW ── -->
+    <section class="view active" id="dashboardView">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon icon-blue"><i class="fas fa-sticky-note"></i></div><div class="stat-info"><span class="stat-number" id="totalNotes">0</span><span class="stat-label">Total Notes</span></div></div>
+        <div class="stat-card"><div class="stat-icon icon-green"><i class="fas fa-folder-open"></i></div><div class="stat-info"><span class="stat-number" id="totalCategories">0</span><span class="stat-label">Categories</span></div></div>
+        <div class="stat-card"><div class="stat-icon icon-yellow"><i class="fas fa-star"></i></div><div class="stat-info"><span class="stat-number" id="totalFavorites">0</span><span class="stat-label">Favourites</span></div></div>
+        <div class="stat-card"><div class="stat-icon icon-red"><i class="fas fa-thumbtack"></i></div><div class="stat-info"><span class="stat-number" id="totalPinned">0</span><span class="stat-label">Pinned</span></div></div>
+      </div>
+      <div class="section-header">
+        <h6><i class="fas fa-clock"></i> Recent Notes</h6>
+        <button class="btn-text" id="viewAllBtn">View All <i class="fas fa-arrow-right"></i></button>
+      </div>
+      <div class="notes-grid" id="recentNotesList"></div>
+      <div class="section-header mt-4">
+        <h6><i class="fas fa-folder-open"></i> Categories</h6>
+      </div>
+      <div class="categories-grid" id="categoriesOverview"></div>
+    </section>
+
+    <!-- ── ALL NOTES VIEW ── -->
+    <section class="view" id="allNotesView">
+      <div class="view-controls">
+        <div class="filter-bar">
+          <select class="filter-select" id="categoryFilter"><option value="">All Categories</option></select>
+          <select class="filter-select" id="colorFilter">
+            <option value="">All Colours</option>
+            <option value="yellow">Yellow</option><option value="blue">Blue</option>
+            <option value="green">Green</option><option value="pink">Pink</option>
+            <option value="purple">Purple</option><option value="default">Default</option>
+          </select>
+          <select class="filter-select" id="sortFilter">
+            <option value="newest">Newest First</option><option value="oldest">Oldest First</option>
+            <option value="title-az">Title A–Z</option><option value="title-za">Title Z–A</option>
+          </select>
+        </div>
+        <div class="view-toggle-group">
+          <button class="view-toggle-btn active" id="gridViewBtn" title="Grid"><i class="fas fa-th-large"></i></button>
+          <button class="view-toggle-btn" id="listViewBtn" title="List"><i class="fas fa-list"></i></button>
+        </div>
+      </div>
+      <div class="notes-grid" id="allNotesList"></div>
+    </section>
+
+    <!-- ── FAVOURITES VIEW ── -->
+    <section class="view" id="favoritesView">
+      <div class="notes-grid" id="favoriteNotesList"></div>
+    </section>
+
+    <!-- ── PINNED VIEW ── -->
+    <section class="view" id="pinnedView">
+      <div class="notes-grid" id="pinnedNotesList"></div>
+    </section>
+
+    <!-- ── CATEGORY VIEW ── -->
+    <section class="view" id="categoryView">
+      <div class="notes-grid" id="categoryNotesList"></div>
+    </section>
+
+    <!-- ── SEARCH VIEW ── -->
+    <section class="view" id="searchView">
+      <p class="search-meta" id="searchMeta">0 results</p>
+      <div class="notes-grid" id="searchNotesList"></div>
+    </section>
+
+  </div><!-- /main-content -->
+</div><!-- /appScreen -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     CREATE / EDIT NOTE MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="noteModalLabel"><i class="fas fa-plus-circle"></i> Create Note</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="noteForm" novalidate>
+          <input type="hidden" id="noteId">
+
+          <!-- Title -->
+          <div class="mb-3">
+            <label class="form-label" for="noteTitle"><i class="fas fa-heading"></i> Title <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="noteTitle" placeholder="Enter note title…" maxlength="120" autocomplete="off">
+            <div class="invalid-feedback">Please enter a title.</div>
+          </div>
+
+          <!-- Category + Color -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label"><i class="fas fa-folder"></i> Category</label>
+              <select class="form-select" id="noteCategory">
+                <option value="Personal">Personal</option>
+                <option value="Study">Study</option>
+                <option value="Work">Work</option>
+                <option value="Programming">Programming</option>
+                <option value="Ideas">Ideas</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label"><i class="fas fa-palette"></i> Colour</label>
+              <div class="color-picker" id="colorPicker">
+                <div class="color-dot c-default active" data-color="default" title="Default"></div>
+                <div class="color-dot c-yellow"  data-color="yellow"  title="Yellow"></div>
+                <div class="color-dot c-blue"    data-color="blue"    title="Blue"></div>
+                <div class="color-dot c-green"   data-color="green"   title="Green"></div>
+                <div class="color-dot c-pink"    data-color="pink"    title="Pink"></div>
+                <div class="color-dot c-purple"  data-color="purple"  title="Purple"></div>
+              </div>
+              <input type="hidden" id="noteColor" value="default">
+            </div>
+          </div>
+
+          <!-- AI / Voice / OCR toolbar -->
+          <div class="editor-toolbar mb-2">
+            <span class="text-muted me-1" style="font-size:.78rem;font-weight:600">AI &amp; Tools:</span>
+
+            <!-- Voice -->
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="voiceBtn" title="Voice Input">
+              <i class="fas fa-microphone"></i> Voice
+            </button>
+
+            <!-- AI dropdown -->
+            <div class="dropdown">
+              <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-wand-magic-sparkles"></i> AI Tools
+              </button>
+              <ul class="dropdown-menu shadow-sm">
+                <li><button class="dropdown-item" type="button" id="aiSummarizeBtn"><i class="fas fa-compress-alt me-2 text-primary"></i>Summarise Note</button></li>
+                <li><button class="dropdown-item" type="button" id="aiGenerateBtn"><i class="fas fa-pen-to-square me-2 text-success"></i>Generate Note</button></li>
+                <li><button class="dropdown-item" type="button" id="aiGrammarBtn"><i class="fas fa-spell-check me-2 text-warning"></i>Fix Grammar</button></li>
+                <li><button class="dropdown-item" type="button" id="aiExpandBtn"><i class="fas fa-expand me-2 text-info"></i>Expand Note</button></li>
+              </ul>
+            </div>
+
+            <!-- OCR -->
+            <button type="button" class="btn btn-outline-warning btn-sm" id="ocrBtn" title="Image to Text (OCR)">
+              <i class="fas fa-camera"></i> Image to Text
+            </button>
+          </div>
+
+          <!-- Quill Editor -->
+          <div class="mb-2">
+            <label class="form-label"><i class="fas fa-align-left"></i> Content <span class="text-danger">*</span></label>
+            <div id="quillEditorWrap">
+              <div id="quillEditor"></div>
+            </div>
+            <div class="content-meta">
+              <small class="text-muted">
+                <i class="fas fa-text-width"></i> Words: <span id="wordCount">0</span>
+                &nbsp;|&nbsp;
+                <i class="fas fa-font"></i> Chars: <span id="charCount">0</span>
+              </small>
+              <small class="autosave-badge" id="autoSaveBadge"><i class="fas fa-check-circle"></i> Auto-saved</small>
+            </div>
+          </div>
+
+          <!-- Pin + Favourite -->
+          <div class="row g-3 mb-3 mt-1">
+            <div class="col-auto">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="notePinned">
+                <label class="form-check-label" for="notePinned"><i class="fas fa-thumbtack text-warning"></i> Pin this note</label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="noteFavorite">
+                <label class="form-check-label" for="noteFavorite"><i class="fas fa-star text-warning"></i> Mark as favourite</label>
+              </div>
+            </div>
+          </div>
+
+          <small class="text-muted"><i class="fas fa-calendar-alt"></i> Date: <span id="noteDate"></span></small>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveNoteBtn"><i class="fas fa-save"></i> Save Note</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     DELETE CONFIRMATION MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h6 class="modal-title"><i class="fas fa-trash-alt"></i> Delete Note</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <i class="fas fa-exclamation-circle text-danger mb-3" style="font-size:2.8rem;display:block"></i>
+        <p class="mb-0">Are you sure you want to delete this note?<br><strong>This cannot be undone.</strong></p>
+      </div>
+      <div class="modal-footer justify-content-center gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal"><i class="fas fa-times"></i> Cancel</button>
+        <button type="button" class="btn btn-danger btn-sm" id="confirmDeleteBtn"><i class="fas fa-trash"></i> Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     VIEW NOTE MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="viewNoteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header" id="viewModalHeader">
+        <div>
+          <h5 class="modal-title mb-1" id="viewNoteTitle"></h5>
+          <small class="text-muted">
+            <i class="fas fa-folder"></i> <span id="viewNoteCategory"></span>
+            &nbsp;&bull;&nbsp;
+            <i class="fas fa-calendar-alt"></i> <span id="viewNoteDate"></span>
+          </small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="view-content" id="viewNoteContent"></div>
+        <hr>
+        <small class="text-muted">
+          <i class="fas fa-text-width"></i> Words: <span id="viewWordCount">0</span>
+          &nbsp;|&nbsp;
+          <i class="fas fa-font"></i> Characters: <span id="viewCharCount">0</span>
+        </small>
+      </div>
+      <div class="modal-footer flex-wrap gap-2">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Close</button>
+        <button type="button" class="btn btn-outline-success btn-sm" id="exportTxtBtn"><i class="fas fa-file-alt"></i> Export TXT</button>
+        <button type="button" class="btn btn-outline-info btn-sm" id="exportHtmlBtn"><i class="fas fa-file-code"></i> Export HTML</button>
+        <button type="button" class="btn btn-primary" id="editFromViewBtn"><i class="fas fa-pencil"></i> Edit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     OCR MODAL  (Image → Text)
+══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="ocrModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-camera text-warning"></i> Image to Text (OCR)</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3">Upload a photo or screenshot to extract text from it automatically.</p>
+
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Choose Image</label>
+          <input type="file" class="form-control" id="ocrFileInput" accept="image/*">
+        </div>
+
+        <div class="d-none" id="ocrPreviewWrap">
+          <img id="ocrPreview" src="" alt="Preview" class="ocr-preview-img d-block mx-auto mb-3">
+        </div>
+
+        <div class="d-none mb-3" id="ocrProgressWrap">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <small class="text-muted">Extracting text…</small>
+            <small class="text-muted" id="ocrProgressLabel">0%</small>
+          </div>
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped progress-bar-animated ocr-progress-bar bg-warning" id="ocrProgress" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label fw-semibold">Extracted Text</label>
+          <textarea class="form-control" id="ocrResult" rows="6" placeholder="Extracted text will appear here…" readonly></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success d-none" id="ocrInsertBtn">
+          <i class="fas fa-arrow-right-to-bracket"></i> Insert into Note
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     AI RESULT MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="aiModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="aiModalTitle"><i class="fas fa-wand-magic-sparkles text-primary"></i> AI Result</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center py-4" id="aiSpinner">
+          <div class="spinner-border text-primary mb-3" role="status"></div>
+          <p class="text-muted mb-0">Thinking…</p>
+        </div>
+        <div class="d-none" id="aiResult">
+          <textarea class="form-control" id="aiResultText" rows="10"></textarea>
+          <small class="text-muted mt-2 d-block">You can edit the text above before inserting it.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Discard</button>
+        <button type="button" class="btn btn-primary" onclick="App.insertAiResult()">
+          <i class="fas fa-arrow-right-to-bracket"></i> Insert into Note
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SETTINGS MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-gear text-primary"></i> Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="p-4">
+          <!-- Account -->
+          <h6 class="fw-bold mb-3"><i class="fas fa-user-circle text-primary"></i> Account</h6>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Display Name</label>
+            <input type="text" class="form-control" id="settingDisplayName" placeholder="Your name">
+          </div>
+          <button class="btn btn-outline-primary btn-sm mb-3" onclick="(async()=>{ try{ await Auth.updateDisplayName(document.getElementById('settingDisplayName').value); App.showToast('Name updated!','success'); }catch(e){App.showToast(e.message,'danger');} })()">
+            <i class="fas fa-check"></i> Update Name
+          </button>
+          <p class="text-muted small mb-2">Signed in as: <strong id="settingEmail"></strong></p>
+          <button class="btn btn-outline-danger btn-sm mb-4" id="settingsLogoutBtn" onclick="Auth.logout()">
+            <i class="fas fa-right-from-bracket"></i> Sign Out
+          </button>
+
+          <hr>
+
+          <!-- Data -->
+          <h6 class="fw-bold mb-3"><i class="fas fa-database text-success"></i> Data Management</h6>
+          <div class="d-flex gap-3 flex-wrap mb-2">
+            <button class="btn btn-outline-success btn-sm" id="exportAllBtn">
+              <i class="fas fa-file-pdf"></i> Export All Notes (PDF)
+            </button>
+            <button class="btn btn-outline-danger btn-sm" id="clearAllBtn">
+              <i class="fas fa-trash-alt"></i> Delete All Notes
+            </button>
+          </div>
+          <p class="text-muted small">Export creates a JSON file you can back up or import later.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     TOAST NOTIFICATION
+══════════════════════════════════════════════════════════ -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+  <div id="appToast" class="toast align-items-center border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMsg">Message</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPTS  (order matters)
+══════════════════════════════════════════════════════════ -->
+<!-- Bootstrap 5 bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Supabase JS v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+<!-- Quill rich text editor -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<!-- Tesseract.js OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+<!-- App modules (dependency order) -->
+<script src="js/supabase-config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/search.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/ocr.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
