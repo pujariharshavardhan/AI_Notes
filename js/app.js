@@ -314,7 +314,6 @@ const App = (() => {
     document.getElementById('exportHtmlBtn')?.addEventListener('click',  () => { const n = Storage.getNoteById(viewingId); if (n) Notes.exportHtml(n); });
 
     /* Settings modal: export all / clear all */
-    document.getElementById('saveApiKeyBtn')?.addEventListener('click', _saveApiKey);
     document.getElementById('exportAllBtn')?.addEventListener('click', () => Storage.exportAllPdf());
     document.getElementById('clearAllBtn')?.addEventListener('click',  async () => {
       if (!confirm('Delete ALL notes? This cannot be undone.')) return;
@@ -785,16 +784,8 @@ const App = (() => {
     const user = Auth.getUser();
     const accNameEl  = document.getElementById('settingDisplayName');
     const accEmailEl = document.getElementById('settingEmail');
-    const apiKeyEl   = document.getElementById('settingGeminiKey');
-    if (accNameEl)  accNameEl.value       = user?.displayName || '';
-    if (accEmailEl) accEmailEl.textContent = user?.email      || '';
-    if (apiKeyEl)   apiKeyEl.value        = Storage.getSettings().geminiApiKey || '';
-  }
-
-  function _saveApiKey() {
-    const key = document.getElementById('settingGeminiKey')?.value.trim();
-    Storage.saveSettings({ geminiApiKey: key });
-    showToast('API key saved!', 'success');
+    if (accNameEl)  accNameEl.value        = user?.displayName || '';
+    if (accEmailEl) accEmailEl.textContent  = user?.email      || '';
   }
 
   /* ===========================================================
