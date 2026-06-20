@@ -6,7 +6,8 @@
  * Model: gemini-1.5-flash (free-tier friendly).
  */
 const AI = (() => {
-  const MODEL   = 'gemini-2.0-flash';
+  const MODEL    = 'gemini-2.0-flash';
+  const BASE_V1  = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent`;
   const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
   function _key() {
@@ -15,43 +16,54 @@ const AI = (() => {
 
   function hasKey() { return !!_key(); }
 
+  async function _tryFetch(url, headers, body) {
+    const res  = await fetch(url, { method: 'POST', headers, body });
+    const data = await res.json();
+    return { res, data };
+  }
+
   async function _call(prompt) {
     const key = _key();
-    if (!key) throw new Error('Gemini API key not configured. Add it in ⚙ Settings → API Keys.');
+    if (!key) throw new Error('Gemini API key not configured.');
 
-    const body = JSON.stringify({
+    const body    = JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
     });
+    const ct      = { 'Content-Type': 'application/json' };
+    const isAIza  = key.startsWith('AIza');
 
-    /* Keys starting with "AIza" → standard API-key query-param style.
-       All other formats (AQ., OAuth tokens, etc.) → Bearer header style. */
-    const useBearer = !key.startsWith('AIza');
+    /* Build ordered list of attempts: v1 key-param, v1 bearer, v1beta key-param, v1beta bearer */
+    const attempts = isAIza
+      ? [
+          { url: `${BASE_V1}?key=${key}`,   headers: ct },
+          { url: `${BASE_URL}?key=${key}`,  headers: ct },
+        ]
+      : [
+          { url: BASE_V1,  headers: { ...ct, Authorization: `Bearer ${key}` } },
+          { url: BASE_URL, headers: { ...ct, Authorization: `Bearer ${key}` } },
+          { url: `${BASE_V1}?key=${key}`,  headers: ct },
+          { url: `${BASE_URL}?key=${key}`, headers: ct },
+        ];
 
-    const url     = useBearer ? BASE_URL : `${BASE_URL}?key=${key}`;
-    const headers = { 'Content-Type': 'application/json' };
-    if (useBearer) headers['Authorization'] = `Bearer ${key}`;
-
-    const res  = await fetch(url, { method: 'POST', headers, body });
-    const data = await res.json();
-
-    if (!res.ok || data.error) {
-      const msg = data.error?.message || `HTTP ${res.status}`;
-      /* If bearer failed, retry with key param as a last resort */
-      if (useBearer && res.status === 401) {
-        const res2  = await fetch(`${BASE_URL}?key=${key}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
-        const data2 = await res2.json();
-        if (!res2.ok || data2.error) throw new Error(data2.error?.message || `HTTP ${res2.status}`);
-        const t2 = data2.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!t2) throw new Error('Empty response from Gemini.');
-        return t2.trim();
+    let lastErr = '';
+    for (const attempt of attempts) {
+      try {
+        const { res, data } = await _tryFetch(attempt.url, attempt.headers, body);
+        if (res.ok && !data.error) {
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) throw new Error('Empty response from Gemini.');
+          return text.trim();
+        }
+        lastErr = data.error?.message || `HTTP ${res.status}`;
+        /* Don't retry on quota errors — they'll fail on all endpoints */
+        if (res.status === 429 || (data.error?.code === 429)) throw new Error(lastErr);
+      } catch (e) {
+        if (e.message.includes('quota') || e.message.includes('429') || e.message.includes('Quota')) throw e;
+        lastErr = e.message;
       }
-      throw new Error(msg);
     }
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error('Empty response from Gemini.');
-    return text.trim();
+    throw new Error(lastErr || 'Gemini API request failed.');
   }
 
   /**
