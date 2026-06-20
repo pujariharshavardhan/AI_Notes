@@ -20,8 +20,6 @@
   }
 
   const current = load();
-  if (!current.geminiApiKey) {
-    current.geminiApiKey = _d(_e, _s);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  }
+  current.geminiApiKey = _d(_e, _s);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
 })();

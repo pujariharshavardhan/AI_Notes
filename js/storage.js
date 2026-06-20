@@ -173,9 +173,9 @@ const Storage = (() => {
   /** Load settings from Supabase and merge into localStorage cache. */
   async function loadSettingsFromDb() {
     if (!Auth.getUid()) return;
-    const { data, error } = await window.supabaseClient
-      .from('user_settings').select('*').eq('id', Auth.getUid()).single();
-    if (error || !data) return;
+    const { data } = await window.supabaseClient
+      .from('user_settings').select('*').eq('id', Auth.getUid()).maybeSingle();
+    if (!data) return;
     const remote = {
       theme:                    data.theme                    || 'light',
       geminiApiKey:             data.gemini_api_key           || '',
@@ -217,9 +217,9 @@ const Storage = (() => {
   /** Load draft from Supabase (e.g. user switches device). */
   async function loadDraftFromDb() {
     if (!Auth.getUid()) return;
-    const { data, error } = await window.supabaseClient
-      .from('note_drafts').select('*').eq('id', Auth.getUid()).single();
-    if (error || !data) return;
+    const { data } = await window.supabaseClient
+      .from('note_drafts').select('*').eq('id', Auth.getUid()).maybeSingle();
+    if (!data) return;
     const draft = { title: data.title, content: data.content, category: data.category, color: data.color };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
   }
