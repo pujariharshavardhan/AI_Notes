@@ -1,14 +1,36 @@
 exports.handler = async (event) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+  };
+
+  if (event.httpMethod === 'GET') {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        hasKey: !!process.env.GROQ_API_KEY,
+        keyPrefix: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.substring(0, 6) : 'NOT SET',
+      }),
+    };
+  }
+
   if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
 
   try {
     const { prompt } = JSON.parse(event.body || '{}');
-    if (!prompt) return { statusCode: 400, body: JSON.stringify({ error: 'No prompt provided' }) };
+    if (!prompt) return { statusCode: 400, headers, body: JSON.stringify({ error: 'No prompt provided' }) };
 
     const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'AI not configured on server' }) };
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'AI not configured on server. Set GROQ_API_KEY in Netlify environment variables.' }),
+      };
+    }
 
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -29,13 +51,13 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      headers,
       body: JSON.stringify({ text: data.choices[0].message.content }),
     };
   } catch (err) {
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ error: err.message }),
     };
   }
