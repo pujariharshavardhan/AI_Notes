@@ -72,19 +72,72 @@ const AI = (() => {
   }
 
   /* ---------- Generate Note ---------- */
+  const SKIP_SECTIONS = new Set([
+    'references', 'external links', 'see also', 'further reading', 'notes',
+    'bibliography', 'sources', 'citations', 'footnotes', 'gallery',
+  ]);
+
+  /* Fetch the FULL plain-text article and split it into { lead, sections } */
+  async function _wikiArticle(title) {
+    const res = await fetch(
+      'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext' +
+      `&redirects=1&format=json&origin=*&titles=${encodeURIComponent(title)}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const page = Object.values(data.query?.pages || {})[0];
+    if (!page || !page.extract) return null;
+
+    /* Article text uses "== Heading ==" markers between sections */
+    const parts = page.extract.split(/\n==+\s*([^=\n]+?)\s*==+\n/);
+    const lead = parts[0].trim();
+    const sections = [];
+    for (let i = 1; i < parts.length - 1; i += 2) {
+      const heading = parts[i].trim();
+      const body = parts[i + 1].trim();
+      if (!body || SKIP_SECTIONS.has(heading.toLowerCase())) continue;
+      sections.push({ heading, body });
+    }
+    return { title: page.title, lead, sections };
+  }
+
   async function generateNote(topic) {
     if (!topic.trim()) throw new Error('Please enter a topic.');
 
     const { title, extract, url } = await _wikiSummary(topic);
-    const sentences = _splitSentences(extract);
-    const intro = sentences[0] || extract;
-    const points = sentences.slice(1);
 
-    let note = `${title}\n\n${intro}\n\n`;
-    if (points.length) {
-      note += 'Key Points:\n' + points.map(p => `- ${p}`).join('\n') + '\n\n';
+    let article = null;
+    try { article = await _wikiArticle(title); } catch (_) { /* fall back to short summary */ }
+    const lead = (article && article.lead) || extract;
+
+    const leadSentences = _splitSentences(lead);
+    let note = `${article?.title || title}\n\n`;
+
+    /* Introduction: first paragraph of the lead, capped at 4 sentences */
+    const firstPara = lead.split(/\n\n+/)[0];
+    const introSentences = _splitSentences(firstPara);
+    const intro = introSentences.length > 4 ? introSentences.slice(0, 4).join(' ') : firstPara;
+    note += `Introduction:\n${intro}\n\n`;
+
+    /* Key points: the most informative sentences from the whole lead */
+    const keyPoints = leadSentences.length > 3
+      ? _splitSentences(summarize(lead, 5))
+      : leadSentences;
+    if (keyPoints.length) {
+      note += 'Key Points:\n' + keyPoints.map(p => `- ${p}`).join('\n') + '\n\n';
     }
-    note += `Summary: ${summarize(extract, 2)}`;
+
+    /* Detailed sections: heading + the 2 most informative sentences of each */
+    if (article && article.sections.length) {
+      for (const sec of article.sections.slice(0, 5)) {
+        let secText;
+        try { secText = summarize(sec.body, 2); } catch (_) { continue; }
+        if (!secText.trim()) continue;
+        note += `${sec.heading}:\n${secText}\n\n`;
+      }
+    }
+
+    note += `Summary:\n${summarize(lead, 2)}`;
     if (url) note += `\n\nSource: ${url}`;
     return note;
   }
