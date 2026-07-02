@@ -138,7 +138,6 @@ const AI = (() => {
     }
 
     note += `Summary:\n${summarize(lead, 2)}`;
-    if (url) note += `\n\nSource: ${url}`;
     return note;
   }
 
@@ -189,9 +188,8 @@ const AI = (() => {
     const topWord = Object.entries(freq).sort((a, b) => b[1] - a[1])[0];
     if (topWord) {
       try {
-        const { title, extract, url } = await _wikiSummary(topWord[0]);
+        const { title, extract } = await _wikiSummary(topWord[0]);
         expanded += `\n\nAdditional Context (${title}):\n${extract}`;
-        if (url) expanded += `\n\nSource: ${url}`;
       } catch (_) { /* no extra context available – that's fine, keep the reformatted note */ }
     }
     return expanded;
