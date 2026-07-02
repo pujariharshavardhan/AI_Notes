@@ -669,11 +669,6 @@ const App = (() => {
      AI FEATURES
   =========================================================== */
   async function _runAI(action) {
-    if (!AI.hasKey()) {
-      showToast('Add your Gemini API key in ⚙ Settings → API Keys.', 'danger');
-      return;
-    }
-
     /* For "generate" we need a topic input */
     if (action === 'generate') {
       const topic = prompt('What topic should I generate a note about?');
